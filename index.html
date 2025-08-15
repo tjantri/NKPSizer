@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NKP Sizing Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans text-gray-800 flex flex-col items-center">
+
+    <header class="w-full bg-indigo-600 shadow-md text-white py-4 mb-8">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-3xl font-bold">NKP Dashboard</h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="#" class="text-lg hover:text-indigo-200 transition-colors duration-200">หน้าหลัก</a></li>
+                    <li><a href="#" class="text-lg font-bold text-yellow-300 hover:text-white transition-colors duration-200">เครื่องมือ Sizing</a></li>
+                    <li><a href="#" class="text-lg hover:text-indigo-200 transition-colors duration-200">เกี่ยวกับ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 pb-8 flex flex-col items-center">
+        <div class="w-full max-w-6xl p-8 rounded-3xl shadow-2xl bg-white border border-gray-200">
+            <h1 class="text-4xl font-extrabold text-center text-indigo-800 mb-2">NKP Sizing Tool</h1>
+            <p class="text-center text-gray-600 mb-8">เครื่องมือคำนวณทรัพยากรสำหรับสภาพแวดล้อมทั้งหมด</p>
+
+            <div class="flex flex-col gap-6 mt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="p-6 m-2 rounded-2xl shadow-xl bg-purple-100 border-purple-500 border-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-800">NKP Management</h3>
+                            <div class="w-12 h-6 rounded-full bg-indigo-500"></div>
+                        </div>
+                        <div class="p-4 m-2 rounded-xl shadow bg-white border-2 border-indigo-300">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="text-lg font-semibold text-gray-700">Management Application</h4>
+                                <div class="w-12 h-6 rounded-full bg-indigo-500"></div>
+                            </div>
+                            <div class="text-gray-700">
+                                <div class="flex items-center justify-between my-2">
+                                    <label class="text-sm text-gray-600 mr-2 min-w-40">Control Plane Node Qty:</label>
+                                    <input type="number" value="3" class="w-24 p-2 rounded-md text-sm text-center border bg-white">
+                                </div>
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 m-2 rounded-2xl shadow-xl bg-white border-indigo-500 border-4">
+                        </div>
+
+                    <div class="p-6 m-2 rounded-2xl shadow-xl bg-white border-indigo-500 border-4">
+                        </div>
+                </div>
+
+                <div class="p-6 m-2 rounded-2xl shadow-xl bg-white border-indigo-500 border-4">
+                    <h3 class="text-xl font-bold text-gray-800">Non-Production Sizing</h3>
+                    </div>
+            </div>
+        </div>
+
+        <div class="mt-8 w-full max-w-6xl p-6 bg-indigo-100 rounded-2xl shadow-xl border-4 border-indigo-500">
+            <h2 class="text-2xl font-bold text-indigo-800 mb-2">Total Infrastructure Requirement</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div class="p-4 bg-white rounded-xl shadow border-2 border-indigo-300">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">DC Infra</h3>
+                    <p class="text-base text-gray-600"><span class="font-medium">Total vCPUs:</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
+                    <p class="text-base text-gray-600"><span class="font-medium">Total Memory (GB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
+                    <p class="text-base text-gray-600"><span class="font-medium">Total Disk (GiB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
+                </div>
+                <div class="p-4 bg-white rounded-xl shadow border-2 border-indigo-300">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">DR Infra</h3>
+                    <p class="text-base text-gray-600"><span class="font-medium">Total vCPUs:</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
+                    <p class="text-base text-gray-600"><span class="font-medium">Total Memory (GB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
+                    <p class="text-base text-gray-600"><span class="font-medium">Total Disk (GiB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 w-full max-w-6xl p-6 bg-purple-100 rounded-2xl shadow-xl border-4 border-purple-500">
+            <h2 class="text-2xl font-bold text-purple-800 mb-4">การคำนวณการเติบโต</h2>
+            </div>
+    </main>
+
+</body>
+</html>
