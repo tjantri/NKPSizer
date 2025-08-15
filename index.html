@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NKP Sizing Tool</title>
-  <link rel="icon" href="https://drive.google.com/file/d/1UILSlCDattN2381sfMvnzfMcSNbSRQ2y/view?usp=drive_link" type="image/x-icon">
+  <link rel="icon" href="Nexus-Icon2-Trans.ico" type="image/x-icon">
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -63,13 +63,13 @@
     };
 
     const SizingInput = ({ label, value, onChange, disabled, widthClass = "w-24", type = "number" }) => (
-      <div className="flex items-center justify-between my-2">
-        <label className="text-sm text-gray-600 mr-2 min-w-40">{label}</label>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between my-2 gap-1">
+        <label className="text-sm text-gray-600 md:min-w-40">{label}</label>
         <input
           type={type}
           value={value}
           onChange={onChange}
-          className={`${widthClass} p-2 rounded-md text-sm text-center border transition-colors duration-200 ${disabled ? 'bg-gray-200 cursor-not-allowed' : 'bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`}
+          className={`w-full md:${widthClass} p-2 rounded-md text-sm text-center border transition-colors duration-200 ${disabled ? 'bg-gray-200 cursor-not-allowed' : 'bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`}
           disabled={disabled}
         />
       </div>
