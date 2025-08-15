@@ -1,87 +1,585 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NKP Sizing Tool</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NKP Sizing Tool</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SizingCard = ({ title, children, isIncluded, onToggle, bgColor, borderColor }) => {
+      return (
+        <div className={`p-6 m-2 rounded-2xl shadow-xl transition-all duration-300 ${isIncluded ? `${bgColor} ${borderColor} border-4` : 'bg-gray-100 border-2 border-transparent opacity-70'}`}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+            <label className="flex items-center cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={isIncluded}
+                  onChange={onToggle}
+                />
+                <div className={`block w-12 h-6 rounded-full transition-all duration-300 ${isIncluded ? 'bg-indigo-500' : 'bg-gray-500'}`}></div>
+                <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all duration-300 transform ${isIncluded ? 'translate-x-6' : ''}`}></div>
+              </div>
+            </label>
+          </div>
+          {children}
+        </div>
+      );
+    };
+
+    const SubSizingCard = ({ title, children, toggle, onToggle, isMasterToggleOn, showToggle = true }) => {
+      const isChecked = isMasterToggleOn && toggle;
+      return (
+        <div className={`p-4 m-2 rounded-xl shadow transition-all duration-300 ${isChecked ? 'bg-white border-2 border-indigo-300' : 'bg-gray-200 opacity-70'}`}>
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-lg font-semibold text-gray-700">{title}</h4>
+            {showToggle && (
+              <label className="flex items-center cursor-pointer">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={isChecked}
+                    onChange={onToggle}
+                    disabled={!isMasterToggleOn}
+                  />
+                  <div className={`block bg-gray-500 w-12 h-6 rounded-full transition-all duration-300 ${isChecked ? 'bg-indigo-500' : ''}`}></div>
+                  <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all duration-300 transform ${isChecked ? 'translate-x-6' : ''}`}></div>
+                </div>
+              </label>
+            )}
+          </div>
+          {children}
+        </div>
+      );
+    };
+
+    const SizingInput = ({ label, value, onChange, disabled, widthClass = "w-24", type = "number" }) => (
+      <div className="flex items-center justify-between my-2">
+        <label className="text-sm text-gray-600 mr-2 min-w-40">{label}</label>
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          className={`${widthClass} p-2 rounded-md text-sm text-center border transition-colors duration-200 ${disabled ? 'bg-gray-200 cursor-not-allowed' : 'bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`}
+          disabled={disabled}
+        />
+      </div>
+    );
+
+    const NKPManagementSizingTool = ({ isMasterToggleOn, onMasterToggle, setTotalManagement }) => {
+      const [management, setManagement] = useState({
+        cpNodeQty: 3,
+        cpVcpus: 4,
+        cpMem: 16,
+        cpDisk: 80,
+        workerNodeQty: 4,
+        workerVcpus: 8,
+        workerMem: 32,
+        workerDisk: 100,
+        reservedVcpus: 12,
+        reservedMem: 15
+      });
+
+      useEffect(() => {
+        if (isMasterToggleOn) {
+          const totalVcpus = (management.cpNodeQty * management.cpVcpus) + (management.workerNodeQty * management.workerVcpus) + Number(management.reservedVcpus);
+          const totalMem = (management.cpNodeQty * management.cpMem) + (management.workerNodeQty * management.workerMem) + Number(management.reservedMem);
+          const totalDisk = (management.cpNodeQty * management.cpDisk) + (management.workerNodeQty * management.workerDisk);
+          setTotalManagement({ vcpus: totalVcpus, mem: totalMem, disk: totalDisk });
+        } else {
+          setTotalManagement({ vcpus: 0, mem: 0, disk: 0 });
+        }
+      }, [management, isMasterToggleOn, setTotalManagement]);
+
+      return (
+        <SizingCard
+          title="NKP Management"
+          isIncluded={isMasterToggleOn}
+          onToggle={onMasterToggle}
+          bgColor="bg-purple-100"
+          borderColor="border-purple-500"
+        >
+          <SubSizingCard
+            title="Management Application"
+            toggle={isMasterToggleOn}
+            isMasterToggleOn={isMasterToggleOn}
+            showToggle={false}
+          >
+            <div className="text-gray-700">
+              <SizingInput label="Control Plane Node Qty:" value={management.cpNodeQty} onChange={(e) => setManagement({...management, cpNodeQty: e.target.value})} disabled={!isMasterToggleOn} />
+              <SizingInput label="Control Plane vCPUs:" value={management.cpVcpus} onChange={(e) => setManagement({...management, cpVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+              <SizingInput label="Control Plane Mem (GB):" value={management.cpMem} onChange={(e) => setManagement({...management, cpMem: e.target.value})} disabled={!isMasterToggleOn} />
+              <SizingInput label="Control Plane Disk (GiB):" value={management.cpDisk} onChange={(e) => setManagement({...management, cpDisk: e.target.value})} disabled={!isMasterToggleOn} />
+              <hr className="my-4 border-gray-300" />
+              <SizingInput label="Worker Node Qty:" value={management.workerNodeQty} onChange={(e) => setManagement({...management, workerNodeQty: e.target.value})} disabled={!isMasterToggleOn} />
+              <SizingInput label="Worker vCPUs:" value={management.workerVcpus} onChange={(e) => setManagement({...management, workerVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+              <SizingInput label="Worker Mem (GB):" value={management.workerMem} onChange={(e) => setManagement({...management, workerMem: e.target.value})} disabled={!isMasterToggleOn} />
+              <SizingInput label="Worker Disk (GiB):" value={management.workerDisk} onChange={(e) => setManagement({...management, workerDisk: e.target.value})} disabled={!isMasterToggleOn} />
+              <hr className="my-4 border-gray-300" />
+              <SizingInput label="Reserved vCPUs Platform App:" value={management.reservedVcpus} onChange={(e) => setManagement({...management, reservedVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+              <SizingInput label="Reserved Memory Platform App (GB):" value={management.reservedMem} onChange={(e) => setManagement({...management, reservedMem: e.target.value})} disabled={!isMasterToggleOn} />
+            </div>
+          </SubSizingCard>
+        </SizingCard>
+      );
+    };
+
+    const ProductionSizingTool = ({ isMasterToggleOn, onMasterToggle, setTotalProduction }) => {
+        const [production, setProduction] = useState({
+          cpNodeQty: 3,
+          cpVcpus: 4,
+          cpMem: 16,
+          cpDisk: 80,
+          workerNodeQty: 4,
+          workerVcpus: 8,
+          workerMem: 32,
+          workerDisk: 100,
+          reservedVcpus: 12,
+          reservedMem: 15
+        });
+
+        useEffect(() => {
+          if (isMasterToggleOn) {
+            const totalVcpus = (production.cpNodeQty * production.cpVcpus) + (production.workerNodeQty * production.workerVcpus) + Number(production.reservedVcpus);
+            const totalMem = (production.cpNodeQty * production.cpMem) + (production.workerNodeQty * production.workerMem) + Number(production.reservedMem);
+            const totalDisk = (production.cpNodeQty * production.cpDisk) + (production.workerNodeQty * production.workerDisk);
+            setTotalProduction({ vcpus: totalVcpus, mem: totalMem, disk: totalDisk });
+          } else {
+            setTotalProduction({ vcpus: 0, mem: 0, disk: 0 });
+          }
+        }, [production, isMasterToggleOn, setTotalProduction]);
+
+        return (
+          <SizingCard
+            title="Production Sizing"
+            isIncluded={isMasterToggleOn}
+            onToggle={onMasterToggle}
+            bgColor="bg-white"
+            borderColor="border-indigo-500"
+          >
+            <SubSizingCard
+              title="Core Application"
+              toggle={isMasterToggleOn}
+              isMasterToggleOn={isMasterToggleOn}
+              showToggle={false}
+            >
+              <div className="text-gray-700">
+                <SizingInput label="Control Plane Node Qty:" value={production.cpNodeQty} onChange={(e) => setProduction({...production, cpNodeQty: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Control Plane vCPUs:" value={production.cpVcpus} onChange={(e) => setProduction({...production, cpVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Control Plane Mem (GB):" value={production.cpMem} onChange={(e) => setProduction({...production, cpMem: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Control Plane Disk (GiB):" value={production.cpDisk} onChange={(e) => setProduction({...production, cpDisk: e.target.value})} disabled={!isMasterToggleOn} />
+                <hr className="my-4 border-gray-300" />
+                <SizingInput label="Worker Node Qty:" value={production.workerNodeQty} onChange={(e) => setProduction({...production, workerNodeQty: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Worker vCPUs:" value={production.workerVcpus} onChange={(e) => setProduction({...production, workerVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Worker Mem (GB):" value={production.workerMem} onChange={(e) => setProduction({...production, workerMem: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Worker Disk (GiB):" value={production.workerDisk} onChange={(e) => setProduction({...production, workerDisk: e.target.value})} disabled={!isMasterToggleOn} />
+                <hr className="my-4 border-gray-300" />
+                <SizingInput label="Reserved vCPUs Platform App:" value={production.reservedVcpus} onChange={(e) => setProduction({...production, reservedVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Reserved Memory Platform App (GB):" value={production.reservedMem} onChange={(e) => setProduction({...production, reservedMem: e.target.value})} disabled={!isMasterToggleOn} />
+              </div>
+            </SubSizingCard>
+          </SizingCard>
+        );
+      };
+
+    const NonProductionSizingTool = ({ isMasterToggleOn, onMasterToggle, setTotalNonProd }) => {
+      const [devToggle, setDevToggle] = useState(true);
+      const [uatToggle, setUatToggle] = useState(false);
+      const [sitToggle, setSitToggle] = useState(false);
+
+      const [dev, setDev] = useState({
+        cpNodeQty: 1, cpVcpus: 4, cpMem: 16, cpDisk: 80,
+        workerNodeQty: 1, workerVcpus: 4, workerMem: 16, workerDisk: 80,
+        reservedVcpus: 0, reservedMem: 0
+      });
+
+      const [uat, setUat] = useState({
+        cpNodeQty: 1, cpVcpus: 4, cpMem: 16, cpDisk: 80,
+        workerNodeQty: 2, workerVcpus: 4, workerMem: 16, workerDisk: 80,
+        reservedVcpus: 0, reservedMem: 0
+      });
+
+      const [sit, setSit] = useState({
+        cpNodeQty: 1, cpVcpus: 4, cpMem: 16, cpDisk: 80,
+        workerNodeQty: 2, workerVcpus: 4, workerMem: 16, workerDisk: 80,
+        reservedVcpus: 0, reservedMem: 0
+      });
+
+      useEffect(() => {
+        let newTotalVcpus = 0;
+        let newTotalMem = 0;
+        let newTotalDisk = 0;
+
+        if (isMasterToggleOn) {
+          if (devToggle) {
+            newTotalVcpus += (dev.cpNodeQty * dev.cpVcpus) + (dev.workerNodeQty * dev.workerVcpus) + Number(dev.reservedVcpus);
+            newTotalMem += (dev.cpNodeQty * dev.cpMem) + (dev.workerNodeQty * dev.workerMem) + Number(dev.reservedMem);
+            newTotalDisk += (dev.cpNodeQty * dev.cpDisk) + (dev.workerNodeQty * dev.workerDisk);
+          }
+
+          if (uatToggle) {
+            newTotalVcpus += (uat.cpNodeQty * uat.cpVcpus) + (uat.workerNodeQty * uat.workerVcpus) + Number(uat.reservedVcpus);
+            newTotalMem += (uat.cpNodeQty * uat.cpMem) + (uat.workerNodeQty * uat.workerMem) + Number(uat.reservedMem);
+            newTotalDisk += (uat.cpNodeQty * uat.cpDisk) + (uat.workerNodeQty * uat.workerDisk);
+          }
+
+          if (sitToggle) {
+            newTotalVcpus += (sit.cpNodeQty * sit.cpVcpus) + (sit.workerNodeQty * sit.workerVcpus) + Number(sit.reservedVcpus);
+            newTotalMem += (sit.cpNodeQty * sit.cpMem) + (sit.workerNodeQty * sit.workerMem) + Number(sit.reservedMem);
+            newTotalDisk += (sit.cpNodeQty * sit.cpDisk) + (sit.workerNodeQty * sit.workerDisk);
+          }
+        }
+        setTotalNonProd({ vcpus: newTotalVcpus, mem: newTotalMem, disk: newTotalDisk });
+      }, [isMasterToggleOn, devToggle, uatToggle, sitToggle, dev, uat, sit, setTotalNonProd]);
+
+      return (
+        <SizingCard
+          title="Non-Production Sizing"
+          isIncluded={isMasterToggleOn}
+          onToggle={onMasterToggle}
+          bgColor="bg-white"
+          borderColor="border-indigo-500"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <SubSizingCard
+                title="Development (DEV)"
+                toggle={devToggle}
+                onToggle={() => setDevToggle(!devToggle)}
+                isMasterToggleOn={isMasterToggleOn}
+              >
+                <div className="text-gray-700">
+                  <SizingInput label="Control Plane Node Qty:" value={dev.cpNodeQty} onChange={(e) => setDev({...dev, cpNodeQty: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <SizingInput label="Control Plane vCPUs:" value={dev.cpVcpus} onChange={(e) => setDev({...dev, cpVcpus: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <SizingInput label="Control Plane Mem (GB):" value={dev.cpMem} onChange={(e) => setDev({...dev, cpMem: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <SizingInput label="Control Plane Disk (GiB):" value={dev.cpDisk} onChange={(e) => setDev({...dev, cpDisk: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <hr className="my-4 border-gray-300" />
+                  <SizingInput label="Worker Node Qty:" value={dev.workerNodeQty} onChange={(e) => setDev({...dev, workerNodeQty: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <SizingInput label="Worker vCPUs:" value={dev.workerVcpus} onChange={(e) => setDev({...dev, workerVcpus: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <SizingInput label="Worker Mem (GB):" value={dev.workerMem} onChange={(e) => setDev({...dev, workerMem: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <SizingInput label="Worker Disk (GiB):" value={dev.workerDisk} onChange={(e) => setDev({...dev, workerDisk: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <hr className="my-4 border-gray-300" />
+                  <SizingInput label="Reserved vCPUs Platform App:" value={dev.reservedVcpus} onChange={(e) => setDev({...dev, reservedVcpus: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                  <SizingInput label="Reserved Memory Platform App (GB):" value={dev.reservedMem} onChange={(e) => setDev({...dev, reservedMem: e.target.value})} disabled={!isMasterToggleOn || !devToggle} />
+                </div>
+              </SubSizingCard>
+              <SubSizingCard title="Development (UAT)" toggle={uatToggle} onToggle={() => setUatToggle(!uatToggle)} isMasterToggleOn={isMasterToggleOn}>
+                <div className="text-gray-700">
+                  <SizingInput label="Control Plane Node Qty:" value={uat.cpNodeQty} onChange={(e) => setUat({...uat, cpNodeQty: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <SizingInput label="Control Plane vCPUs:" value={uat.cpVcpus} onChange={(e) => setUat({...uat, cpVcpus: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <SizingInput label="Control Plane Mem (GB):" value={uat.cpMem} onChange={(e) => setUat({...uat, cpMem: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <SizingInput label="Control Plane Disk (GiB):" value={uat.cpDisk} onChange={(e) => setUat({...uat, cpDisk: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <hr className="my-4 border-gray-300" />
+                  <SizingInput label="Worker Node Qty:" value={uat.workerNodeQty} onChange={(e) => setUat({...uat, workerNodeQty: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <SizingInput label="Worker vCPUs:" value={uat.workerVcpus} onChange={(e) => setUat({...uat, workerVcpus: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <SizingInput label="Worker Mem (GB):" value={uat.workerMem} onChange={(e) => setUat({...uat, workerMem: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <SizingInput label="Worker Disk (GiB):" value={uat.workerDisk} onChange={(e) => setUat({...uat, workerDisk: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <hr className="my-4 border-gray-300" />
+                  <SizingInput label="Reserved vCPUs Platform App:" value={uat.reservedVcpus} onChange={(e) => setUat({...uat, reservedVcpus: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                  <SizingInput label="Reserved Memory Platform App (GB):" value={uat.reservedMem} onChange={(e) => setUat({...uat, reservedMem: e.target.value})} disabled={!isMasterToggleOn || !uatToggle} />
+                </div>
+              </SubSizingCard>
+              <SubSizingCard title="Development (SIT)" toggle={sitToggle} onToggle={() => setSitToggle(!sitToggle)} isMasterToggleOn={isMasterToggleOn}>
+                <div className="text-gray-700">
+                  <SizingInput label="Control Plane Node Qty:" value={sit.cpNodeQty} onChange={(e) => setSit({...sit, cpNodeQty: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <SizingInput label="Control Plane vCPUs:" value={sit.cpVcpus} onChange={(e) => setSit({...sit, cpVcpus: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <SizingInput label="Control Plane Mem (GB):" value={sit.cpMem} onChange={(e) => setSit({...sit, cpMem: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <SizingInput label="Control Plane Disk (GiB):" value={sit.cpDisk} onChange={(e) => setSit({...sit, cpDisk: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <hr className="my-4 border-gray-300" />
+                  <SizingInput label="Worker Node Qty:" value={sit.workerNodeQty} onChange={(e) => setSit({...sit, workerNodeQty: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <SizingInput label="Worker vCPUs:" value={sit.workerVcpus} onChange={(e) => setSit({...sit, workerVcpus: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <SizingInput label="Worker Mem (GB):" value={sit.workerMem} onChange={(e) => setSit({...sit, workerMem: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <SizingInput label="Worker Disk (GiB):" value={sit.workerDisk} onChange={(e) => setSit({...sit, workerDisk: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <hr className="my-4 border-gray-300" />
+                  <SizingInput label="Reserved vCPUs Platform App:" value={sit.reservedVcpus} onChange={(e) => setSit({...sit, reservedVcpus: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                  <SizingInput label="Reserved Memory Platform App (GB):" value={sit.reservedMem} onChange={(e) => setSit({...sit, reservedMem: e.target.value})} disabled={!isMasterToggleOn || !sitToggle} />
+                </div>
+              </SubSizingCard>
+          </div>
+        </SizingCard>
+      );
+    };
+
+    const DRSizingTool = ({ isMasterToggleOn, onMasterToggle, setTotalDR }) => {
+        const [dr, setDr] = useState({
+          cpNodeQty: 3,
+          cpVcpus: 4,
+          cpMem: 16,
+          cpDisk: 80,
+          workerNodeQty: 3,
+          workerVcpus: 4,
+          workerMem: 16,
+          workerDisk: 80,
+          reservedVcpus: 0,
+          reservedMem: 0
+        });
+
+        useEffect(() => {
+          if (isMasterToggleOn) {
+            const totalVcpus = (dr.cpNodeQty * dr.cpVcpus) + (dr.workerNodeQty * dr.workerVcpus) + Number(dr.reservedVcpus);
+            const totalMem = (dr.cpNodeQty * dr.cpMem) + (dr.workerNodeQty * dr.workerMem) + Number(dr.reservedMem);
+            const totalDisk = (dr.cpNodeQty * dr.cpDisk) + (dr.workerNodeQty * dr.workerDisk);
+            setTotalDR({ vcpus: totalVcpus, mem: totalMem, disk: totalDisk });
+          } else {
+            setTotalDR({ vcpus: 0, mem: 0, disk: 0 });
+          }
+        }, [dr, isMasterToggleOn, setTotalDR]);
+
+        return (
+          <SizingCard
+            title="DR Sizing"
+            isIncluded={isMasterToggleOn}
+            onToggle={onMasterToggle}
+            bgColor="bg-white"
+            borderColor="border-indigo-500"
+          >
+            <SubSizingCard
+              title="DR Application"
+              toggle={isMasterToggleOn}
+              isMasterToggleOn={isMasterToggleOn}
+              showToggle={false}
+            >
+              <div className="text-gray-700">
+                <SizingInput label="Control Plane Node Qty:" value={dr.cpNodeQty} onChange={(e) => setDr({...dr, cpNodeQty: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Control Plane vCPUs:" value={dr.cpVcpus} onChange={(e) => setDr({...dr, cpVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Control Plane Mem (GB):" value={dr.cpMem} onChange={(e) => setDr({...dr, cpMem: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Control Plane Disk (GiB):" value={dr.cpDisk} onChange={(e) => setDr({...dr, cpDisk: e.target.value})} disabled={!isMasterToggleOn} />
+                <hr className="my-4 border-gray-300" />
+                <SizingInput label="Worker Node Qty:" value={dr.workerNodeQty} onChange={(e) => setDr({...dr, workerNodeQty: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Worker vCPUs:" value={dr.workerVcpus} onChange={(e) => setDr({...dr, workerVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Worker Mem (GB):" value={dr.workerMem} onChange={(e) => setDr({...dr, workerMem: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Worker Disk (GiB):" value={dr.workerDisk} onChange={(e) => setDr({...dr, workerDisk: e.target.value})} disabled={!isMasterToggleOn} />
+                <hr className="my-4 border-gray-300" />
+                <SizingInput label="Reserved vCPUs Platform App:" value={dr.reservedVcpus} onChange={(e) => setDr({...dr, reservedVcpus: e.target.value})} disabled={!isMasterToggleOn} />
+                <SizingInput label="Reserved Memory Platform App (GB):" value={dr.reservedMem} onChange={(e) => setDr({...dr, reservedMem: e.target.value})} disabled={!isMasterToggleOn} />
+              </div>
+            </SubSizingCard>
+          </SizingCard>
+        );
+      };
+
+
+    const App = () => {
+        const [totalManagement, setTotalManagement] = useState({ vcpus: 0, mem: 0, disk: 0 });
+        const [totalProduction, setTotalProduction] = useState({ vcpus: 0, mem: 0, disk: 0 });
+        const [totalNonProd, setTotalNonProd] = useState({ vcpus: 0, mem: 0, disk: 0 });
+        const [totalDR, setTotalDR] = useState({ vcpus: 0, mem: 0, disk: 0 });
+
+        const [isManagementActive, setIsManagementActive] = useState(true);
+        const [isProductionActive, setIsProductionActive] = useState(true);
+        const [isNonProdActive, setIsNonProdActive] = useState(true);
+        const [isDRActive, setIsDRActive] = useState(true);
+
+        const [finalTotalVcpus, setFinalTotalVcpus] = useState(0);
+        const [finalTotalMem, setFinalTotalMem] = useState(0);
+        const [finalTotalDisk, setFinalTotalDisk] = useState(0);
+        const [finalTotalDRVcpus, setFinalTotalDRVcpus] = useState(0);
+        const [finalTotalDRMem, setFinalTotalDRMem] = useState(0);
+        const [finalTotalDRDisk, setFinalTotalDRDisk] = useState(0);
+
+        const [growthPercentageY1, setGrowthPercentageY1] = useState(0.2);
+        const [growthPercentageY2, setGrowthPercentageY2] = useState(0.4);
+        const [growthPercentageY3, setGrowthPercentageY3] = useState(0.6);
+        const [year1Vcpus, setYear1Vcpus] = useState(0);
+        const [year1Mem, setYear1Mem] = useState(0);
+        const [year1Disk, setYear1Disk] = useState(0);
+        const [year2Vcpus, setYear2Vcpus] = useState(0);
+        const [year2Mem, setYear2Mem] = useState(0);
+        const [year2Disk, setYear2Disk] = useState(0);
+        const [year3Vcpus, setYear3Vcpus] = useState(0);
+        const [year3Mem, setYear3Mem] = useState(0);
+        const [year3Disk, setYear3Disk] = useState(0);
+
+        useEffect(() => {
+          const dcVcpus = (isManagementActive ? totalManagement.vcpus : 0) +
+                        (isProductionActive ? totalProduction.vcpus : 0) +
+                        (isNonProdActive ? totalNonProd.vcpus : 0);
+          const dcMem = (isManagementActive ? totalManagement.mem : 0) +
+                      (isProductionActive ? totalProduction.mem : 0) +
+                      (isNonProdActive ? totalNonProd.mem : 0);
+          const dcDisk = (isManagementActive ? totalManagement.disk : 0) +
+                       (isProductionActive ? totalProduction.disk : 0) +
+                       (isNonProdActive ? totalNonProd.disk : 0);
+
+          setFinalTotalVcpus(dcVcpus);
+          setFinalTotalMem(dcMem);
+          setFinalTotalDisk(dcDisk);
+
+          const drVcpus = isDRActive ? totalDR.vcpus : 0;
+          const drMem = isDRActive ? totalDR.mem : 0;
+          const drDisk = isDRActive ? totalDR.disk : 0;
+
+          setFinalTotalDRVcpus(drVcpus);
+          setFinalTotalDRMem(drMem);
+          setFinalTotalDRDisk(drDisk);
+
+          setYear1Vcpus(Math.round(dcVcpus * (1 + Number(growthPercentageY1))));
+          setYear1Mem(Math.round(dcMem * (1 + Number(growthPercentageY1))));
+          setYear1Disk(Math.round(dcDisk * (1 + Number(growthPercentageY1))));
+
+          setYear2Vcpus(Math.round(dcVcpus * (1 + Number(growthPercentageY2))));
+          setYear2Mem(Math.round(dcMem * (1 + Number(growthPercentageY2))));
+          setYear2Disk(Math.round(dcDisk * (1 + Number(growthPercentageY2))));
+
+          setYear3Vcpus(Math.round(dcVcpus * (1 + Number(growthPercentageY3))));
+          setYear3Mem(Math.round(dcMem * (1 + Number(growthPercentageY3))));
+          setYear3Disk(Math.round(dcDisk * (1 + Number(growthPercentageY3))));
+
+        }, [isManagementActive, isProductionActive, isNonProdActive, isDRActive, totalManagement, totalProduction, totalNonProd, totalDR, growthPercentageY1, growthPercentageY2, growthPercentageY3]);
+
+        return (
+          <div className="min-h-screen bg-gray-50 font-sans text-gray-800 flex flex-col items-center">
+            <header className="w-full bg-indigo-600 shadow-md text-white py-4 mb-8">
+              <div className="container mx-auto px-4 flex justify-between items-center">
+                <h1 className="text-3xl font-bold">NKP Dashboard</h1>
+                <nav>
+                  <ul className="flex space-x-4">
+                    <li><a href="#" className="text-lg hover:text-indigo-200 transition-colors duration-200">หน้าหลัก</a></li>
+                    <li><a href="#" className="text-lg font-bold text-yellow-300 hover:text-white transition-colors duration-200">เครื่องมือ Sizing</a></li>
+                    <li><a href="#" className="text-lg hover:text-indigo-200 transition-colors duration-200">เกี่ยวกับ</a></li>
+                  </ul>
+                </nav>
+              </div>
+            </header>
+
+            <main className="container mx-auto px-4 pb-8 flex flex-col items-center">
+              <div className="w-full max-w-6xl p-8 rounded-3xl shadow-2xl bg-white border border-gray-200">
+                <h1 className="text-4xl font-extrabold text-center text-indigo-800 mb-2">NKP Sizing Tool</h1>
+                <p className="text-center text-gray-600 mb-8">เครื่องมือคำนวณทรัพยากรสำหรับสภาพแวดล้อมทั้งหมด</p>
+
+                <div className="flex flex-col gap-6 mt-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <NKPManagementSizingTool
+                      isMasterToggleOn={isManagementActive}
+                      onMasterToggle={() => setIsManagementActive(!isManagementActive)}
+                      setTotalManagement={setTotalManagement}
+                    />
+                    <ProductionSizingTool
+                      isMasterToggleOn={isProductionActive}
+                      onMasterToggle={() => setIsProductionActive(!isProductionActive)}
+                      setTotalProduction={setTotalProduction}
+                    />
+                    <DRSizingTool
+                      isMasterToggleOn={isDRActive}
+                      onMasterToggle={() => setIsDRActive(!isDRActive)}
+                      setTotalDR={setTotalDR}
+                    />
+                  </div>
+                  <NonProductionSizingTool
+                    isMasterToggleOn={isNonProdActive}
+                    onMasterToggle={() => setIsNonProdActive(!isNonProdActive)}
+                    setTotalNonProd={setTotalNonProd}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-8 w-full max-w-6xl p-6 bg-indigo-100 rounded-2xl shadow-xl border-4 border-indigo-500">
+                <h2 className="text-2xl font-bold text-indigo-800 mb-2">Total Infrastructure Requirement</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="p-4 bg-white rounded-xl shadow border-2 border-indigo-300">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">DC Infra</h3>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Total vCPUs:</span> <span className="font-bold text-indigo-600">{finalTotalVcpus}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Total Memory (GB):</span> <span className="font-bold text-indigo-600">{finalTotalMem}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Total Disk (GiB):</span> <span className="font-bold text-indigo-600">{finalTotalDisk}</span>
+                    </p>
+                  </div>
+                  <div className="p-4 bg-white rounded-xl shadow border-2 border-indigo-300">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">DR Infra</h3>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Total vCPUs:</span> <span className="font-bold text-indigo-600">{finalTotalDRVcpus}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Total Memory (GB):</span> <span className="font-bold text-indigo-600">{finalTotalDRMem}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Total Disk (GiB):</span> <span className="font-bold text-indigo-600">{finalTotalDRDisk}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 w-full max-w-6xl p-6 bg-purple-100 rounded-2xl shadow-xl border-4 border-purple-500">
+                <h2 className="text-2xl font-bold text-purple-800 mb-4">การคำนวณการเติบโต</h2>
+                <div className="flex flex-col md:flex-row justify-around items-center mb-4 gap-4">
+                  <SizingInput
+                    label="อัตราการเติบโต ปีที่ 1 (%):"
+                    value={growthPercentageY1 * 100}
+                    onChange={(e) => setGrowthPercentageY1(e.target.value / 100)}
+                    widthClass="w-32"
+                  />
+                  <SizingInput
+                    label="อัตราการเติบโต ปีที่ 2 (%):"
+                    value={growthPercentageY2 * 100}
+                    onChange={(e) => setGrowthPercentageY2(e.target.value / 100)}
+                    widthClass="w-32"
+                  />
+                  <SizingInput
+                    label="อัตราการเติบโต ปีที่ 3 (%):"
+                    value={growthPercentageY3 * 100}
+                    onChange={(e) => setGrowthPercentageY3(e.target.value / 100)}
+                    widthClass="w-32"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-4">
+                  <div className="p-4 bg-purple-200 rounded-lg">
+                    <h3 className="font-semibold text-lg text-purple-800">ปีที่ 1</h3>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">vCPUs:</span> <span className="font-bold text-purple-600">{year1Vcpus}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Memory (GB):</span> <span className="font-bold text-purple-600">{year1Mem}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Disk (GiB):</span> <span className="font-bold text-purple-600">{year1Disk}</span>
+                    </p>
+                  </div>
+                  <div className="p-4 bg-purple-200 rounded-lg">
+                    <h3 className="font-semibold text-lg text-purple-800">ปีที่ 2</h3>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">vCPUs:</span> <span className="font-bold text-purple-600">{year2Vcpus}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Memory (GB):</span> <span className="font-bold text-purple-600">{year2Mem}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Disk (GiB):</span> <span className="font-bold text-purple-600">{year2Disk}</span>
+                    </p>
+                  </div>
+                  <div className="p-4 bg-purple-200 rounded-lg">
+                    <h3 className="font-semibold text-lg text-purple-800">ปีที่ 3</h3>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">vCPUs:</span> <span className="font-bold text-purple-600">{year3Vcpus}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Memory (GB):</span> <span className="font-bold text-purple-600">{year3Mem}</span>
+                    </p>
+                    <p className="text-base text-gray-600">
+                      <span className="font-medium">Disk (GiB):</span> <span className="font-bold text-purple-600">{year3Disk}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        );
+      };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans text-gray-800 flex flex-col items-center">
-
-    <header class="w-full bg-indigo-600 shadow-md text-white py-4 mb-8">
-        <div class="container mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-3xl font-bold">NKP Dashboard</h1>
-            <nav>
-                <ul class="flex space-x-4">
-                    <li><a href="#" class="text-lg hover:text-indigo-200 transition-colors duration-200">หน้าหลัก</a></li>
-                    <li><a href="#" class="text-lg font-bold text-yellow-300 hover:text-white transition-colors duration-200">เครื่องมือ Sizing</a></li>
-                    <li><a href="#" class="text-lg hover:text-indigo-200 transition-colors duration-200">เกี่ยวกับ</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-4 pb-8 flex flex-col items-center">
-        <div class="w-full max-w-6xl p-8 rounded-3xl shadow-2xl bg-white border border-gray-200">
-            <h1 class="text-4xl font-extrabold text-center text-indigo-800 mb-2">NKP Sizing Tool</h1>
-            <p class="text-center text-gray-600 mb-8">เครื่องมือคำนวณทรัพยากรสำหรับสภาพแวดล้อมทั้งหมด</p>
-
-            <div class="flex flex-col gap-6 mt-6">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="p-6 m-2 rounded-2xl shadow-xl bg-purple-100 border-purple-500 border-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold text-gray-800">NKP Management</h3>
-                            <div class="w-12 h-6 rounded-full bg-indigo-500"></div>
-                        </div>
-                        <div class="p-4 m-2 rounded-xl shadow bg-white border-2 border-indigo-300">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="text-lg font-semibold text-gray-700">Management Application</h4>
-                                <div class="w-12 h-6 rounded-full bg-indigo-500"></div>
-                            </div>
-                            <div class="text-gray-700">
-                                <div class="flex items-center justify-between my-2">
-                                    <label class="text-sm text-gray-600 mr-2 min-w-40">Control Plane Node Qty:</label>
-                                    <input type="number" value="3" class="w-24 p-2 rounded-md text-sm text-center border bg-white">
-                                </div>
-                                </div>
-                        </div>
-                    </div>
-
-                    <div class="p-6 m-2 rounded-2xl shadow-xl bg-white border-indigo-500 border-4">
-                        </div>
-
-                    <div class="p-6 m-2 rounded-2xl shadow-xl bg-white border-indigo-500 border-4">
-                        </div>
-                </div>
-
-                <div class="p-6 m-2 rounded-2xl shadow-xl bg-white border-indigo-500 border-4">
-                    <h3 class="text-xl font-bold text-gray-800">Non-Production Sizing</h3>
-                    </div>
-            </div>
-        </div>
-
-        <div class="mt-8 w-full max-w-6xl p-6 bg-indigo-100 rounded-2xl shadow-xl border-4 border-indigo-500">
-            <h2 class="text-2xl font-bold text-indigo-800 mb-2">Total Infrastructure Requirement</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div class="p-4 bg-white rounded-xl shadow border-2 border-indigo-300">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">DC Infra</h3>
-                    <p class="text-base text-gray-600"><span class="font-medium">Total vCPUs:</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
-                    <p class="text-base text-gray-600"><span class="font-medium">Total Memory (GB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
-                    <p class="text-base text-gray-600"><span class="font-medium">Total Disk (GiB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
-                </div>
-                <div class="p-4 bg-white rounded-xl shadow border-2 border-indigo-300">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">DR Infra</h3>
-                    <p class="text-base text-gray-600"><span class="font-medium">Total vCPUs:</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
-                    <p class="text-base text-gray-600"><span class="font-medium">Total Memory (GB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
-                    <p class="text-base text-gray-600"><span class="font-medium">Total Disk (GiB):</span> <span class="font-bold text-indigo-600">Calculated value</span></p>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-8 w-full max-w-6xl p-6 bg-purple-100 rounded-2xl shadow-xl border-4 border-purple-500">
-            <h2 class="text-2xl font-bold text-purple-800 mb-4">การคำนวณการเติบโต</h2>
-            </div>
-    </main>
-
+<body>
+  <div id="root"></div>
 </body>
 </html>
